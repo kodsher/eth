@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereum Pending Transactions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+        }
+        #transaction-hashes {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ethereum Pending Transactions</h1>
+    <div id="transaction-hashes">Loading...</div>
+
+    <script>
+        async function fetchPendingTransactions() {
+            // QuickNode URL (replace this with your own QuickNode endpoint)
+            const quickNodeUrl = "https://greatest-wispy-field.quiknode.pro/12fcf3c94af5adfb4be2efd94bc848b82f17f517";
+            
+            // The JSON-RPC payload for querying pending transactions
+            const payload = {
+                "jsonrpc": "2.0",
+                "method": "eth_getBlockByNumber",
+                "params": ["pending", true],
+                "id": 1
+            };
+
+            try {
+                // Make the POST request to the Ethereum node
+                const response = await fetch(quickNodeUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                // Parse the response as JSON
+                const data = await response.json();
+
+                // Extract transactions from the response
+                const transactions = data.result.transactions;
+
+                // Get the div where we will display the transaction hashes
+                const transactionHashesDiv = document.getElementById("transaction-hashes");
+
+                // Clear the content of the div
+                transactionHashesDiv.innerHTML = "";
+
+                // Check if there are any transactions
+                if (transactions && transactions.length > 0) {
+                    // Create a list to display the hashes
+                    const ul = document.createElement("ul");
+
+                    // Iterate over the transactions and create clickable links
+                    transactions.forEach(tx => {
+                        const li = document.createElement("li");
+
+                        // Create the anchor element
+                        const link = document.createElement("a");
+                        link.href = `https://etherscan.io/tx/${tx.hash}`;
+                        link.target = "_blank"; // Open in a new tab
+                        link.textContent = tx.hash;
+
+                        // Append the link to the list item
+                        li.appendChild(link);
+
+                        // Add the list item to the list
+                        ul.appendChild(li);
+                    });
+
+                    // Append the list to the div
+                    transactionHashesDiv.appendChild(ul);
+                } else {
+                    transactionHashesDiv.textContent = "No pending transactions found.";
+                }
+            } catch (error) {
+                console.error("Error fetching transactions:", error);
+                document.getElementById("transaction-hashes").textContent = "Failed to load transactions.";
+            }
+        }
+
+        // Fetch the pending transactions every second (1000 ms) without refreshing the page
+        setInterval(fetchPendingTransactions, 1000);
+    </script>
+</body>
+</html>
